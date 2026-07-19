@@ -15,13 +15,13 @@
     --bg:#faf8f4; --card:#fff; --text:#2c2621; --sub:#7a6f64;
     --line:#e8e0d5; --accent:#d97757; --accent2:#7a9e5e; --accent3:#5b87b8;
     --chip:#f2ece3; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
-    --done:#b5aa9c;
+    --done:#b5aa9c; --cool:#e8f0e2;
   }
   @media (prefers-color-scheme:dark){
     :root{
       --bg:#1c1a18; --card:#262320; --text:#eae4dc; --sub:#a39687;
       --line:#3a352f; --accent:#e08b6d; --accent2:#8fb36f; --accent3:#7aa3d0;
-      --chip:#322d28; --shadow:0 1px 3px rgba(0,0,0,.3); --done:#6b6157;
+      --chip:#322d28; --shadow:0 1px 3px rgba(0,0,0,.3); --done:#6b6157; --cool:#2c3527;
     }
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -46,10 +46,18 @@
     min-height:44px;padding:8px 4px;transition:.15s;
   }
   nav.tabs button[aria-selected="true"]{background:var(--accent);color:#fff}
-  section.pane{display:none;padding-top:16px}
+  section.pane{display:none;padding-top:14px}
   section.pane.on{display:block}
 
-  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  /* 끼니 필터 */
+  .seg{display:flex;gap:5px;background:var(--chip);padding:4px;border-radius:12px;margin-bottom:13px}
+  .seg button{
+    flex:1;font:inherit;font-weight:700;font-size:.82rem;cursor:pointer;border:none;
+    background:transparent;color:var(--sub);border-radius:9px;min-height:44px;padding:6px 2px;transition:.15s;
+  }
+  .seg button[aria-pressed="true"]{background:var(--card);color:var(--accent);box-shadow:var(--shadow)}
+
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
   .btn{
     font:inherit;font-weight:700;font-size:.88rem;cursor:pointer;border:none;
     border-radius:10px;min-height:44px;padding:10px 16px;color:#fff;background:var(--accent);
@@ -59,6 +67,30 @@
   .btn.sec{background:var(--chip);color:var(--text)}
   .btn.g{background:var(--accent2)}
 
+  /* 냉장고 */
+  details.fridge{
+    background:var(--cool);border:1px solid var(--line);border-radius:14px;
+    padding:12px 13px;margin-bottom:12px;
+  }
+  details.fridge summary{
+    font-weight:700;font-size:.9rem;cursor:pointer;list-style:none;
+    min-height:32px;display:flex;align-items:center;gap:7px;
+  }
+  details.fridge summary::-webkit-details-marker{display:none}
+  details.fridge summary::after{content:"▾";margin-left:auto;color:var(--sub);font-size:.8rem}
+  details.fridge[open] summary::after{content:"▴"}
+  .fhelp{font-size:.78rem;color:var(--sub);margin:8px 0 7px}
+  textarea#fridgeIn{
+    width:100%;font:inherit;font-size:.9rem;padding:10px;border-radius:9px;
+    border:1px solid var(--line);background:var(--card);color:var(--text);
+    min-height:70px;resize:vertical;
+  }
+  .ftags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .ftag{
+    font-size:.76rem;font-weight:600;background:var(--card);border:1px solid var(--accent2);
+    color:var(--accent2);padding:3px 9px;border-radius:20px;
+  }
+
   .day{
     background:var(--card);border:1px solid var(--line);border-radius:14px;
     padding:12px 13px;margin-bottom:10px;box-shadow:var(--shadow);
@@ -66,6 +98,7 @@
   .day.today{border-color:var(--accent);border-width:2px}
   .dayhead{font-weight:800;font-size:.98rem;margin-bottom:9px;display:flex;align-items:center;gap:7px}
   .badge{font-size:.66rem;font-weight:700;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px}
+  .badge.f{background:var(--accent2)}
   .slot{
     display:flex;align-items:flex-start;gap:9px;padding:8px 0;
     border-top:1px solid var(--line);
@@ -76,7 +109,7 @@
     border-radius:6px;padding:3px 6px;white-space:nowrap;min-width:52px;text-align:center;flex-shrink:0;
   }
   .slotbody{flex:1;min-width:0}
-  .slotname{font-weight:700;font-size:.95rem}
+  .slotname{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .slotsub{font-size:.78rem;color:var(--sub);margin-top:1px}
   .reroll{
     background:none;border:none;font-size:1.05rem;cursor:pointer;padding:6px;
@@ -89,21 +122,25 @@
     display:flex;align-items:center;gap:6px;
   }
   .shop h3:first-child{margin-top:0}
+  .shop h3.have{color:var(--accent2)}
   .item{
-    display:flex;align-items:center;gap:10px;background:var(--card);
+    display:flex;align-items:flex-start;gap:10px;background:var(--card);
     border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px;
     cursor:pointer;min-height:44px;
   }
   .item.checked .nm{text-decoration:line-through;color:var(--done)}
+  .item.have{background:var(--cool);opacity:.85}
   .box{
     width:22px;height:22px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#fff;margin-top:1px;
   }
   .item.checked .box{background:var(--accent2);border-color:var(--accent2)}
-  .nm{flex:1;font-size:.92rem;font-weight:600}
-  .cnt{font-size:.74rem;color:var(--sub);background:var(--chip);padding:2px 7px;border-radius:20px}
+  .itembody{flex:1;min-width:0}
+  .nm{font-size:.92rem;font-weight:600}
+  .forwhat{font-size:.74rem;color:var(--sub);margin-top:2px;line-height:1.45}
+  .cnt{font-size:.74rem;color:var(--sub);background:var(--chip);padding:2px 7px;border-radius:20px;flex-shrink:0;margin-top:1px}
 
-  .empty{text-align:center;color:var(--sub);padding:40px 20px;font-size:.9rem}
+  .empty{text-align:center;color:var(--sub);padding:40px 20px;font-size:.9rem;line-height:1.8}
 
   details.pool{
     background:var(--card);border:1px solid var(--line);border-radius:12px;
@@ -144,10 +181,25 @@
 
 <!-- 식단표 -->
 <section class="pane on">
+  <details class="fridge" id="fridgeBox">
+    <summary>🧊 냉장고에 있는 재료 <span class="badge f" id="fcount" style="display:none"></span></summary>
+    <div class="fhelp">여기 적어두면 <b>그 재료를 쓰는 메뉴를 먼저 뽑아줍니다.</b> 쉼표나 줄바꿈으로 구분해서 적으세요. (예: 양파, 계란, 두부)</div>
+    <textarea id="fridgeIn" placeholder="양파, 계란, 감자, 김치..." oninput="onFridgeInput()"></textarea>
+    <div class="ftags" id="ftags"></div>
+  </details>
+
   <div class="bar">
     <button class="btn" onclick="rollWeek()">🎲 일주일치 새로 뽑기</button>
     <button class="btn sec" onclick="clearWeek()">지우기</button>
   </div>
+
+  <div class="seg" role="group" aria-label="끼니 보기">
+    <button aria-pressed="true" onclick="setFilter('all',this)">전체</button>
+    <button aria-pressed="false" onclick="setFilter('b',this)">☀️ 아침</button>
+    <button aria-pressed="false" onclick="setFilter('l',this)">🍱 점심</button>
+    <button aria-pressed="false" onclick="setFilter('d',this)">🌙 저녁</button>
+  </div>
+
   <div id="week"></div>
 </section>
 
@@ -157,11 +209,23 @@
     <button class="btn g" onclick="copyList()">📋 목록 복사</button>
     <button class="btn sec" onclick="resetChecks()">체크 초기화</button>
   </div>
+  <div class="seg" role="group" aria-label="끼니 보기">
+    <button aria-pressed="true" onclick="setFilter('all',this)">전체</button>
+    <button aria-pressed="false" onclick="setFilter('b',this)">☀️ 아침</button>
+    <button aria-pressed="false" onclick="setFilter('l',this)">🍱 점심</button>
+    <button aria-pressed="false" onclick="setFilter('d',this)">🌙 저녁</button>
+  </div>
   <div id="shop" class="shop"></div>
 </section>
 
 <!-- 메뉴 전체 -->
 <section class="pane">
+  <div class="seg" role="group" aria-label="끼니 보기">
+    <button aria-pressed="true" onclick="setFilter('all',this)">전체</button>
+    <button aria-pressed="false" onclick="setFilter('b',this)">☀️ 아침</button>
+    <button aria-pressed="false" onclick="setFilter('l',this)">🍱 점심</button>
+    <button aria-pressed="false" onclick="setFilter('d',this)">🌙 저녁</button>
+  </div>
   <div id="allpool"></div>
 </section>
 
@@ -367,105 +431,161 @@ const POOL = {
 
 const DAYS = ["월","화","수","목","금","토","일"];
 const SLOTS = [["b","아침"],["l","도시락"],["d","저녁"]];
+const SLOTNAME = {b:"아침", l:"점심", d:"저녁"};
 const KEY = "weeklyMenu.v1";
 const KEYCHK = "weeklyMenu.checks.v1";
+const KEYFRIDGE = "weeklyMenu.fridge.v1";
 
-let week = null;      // [{b:idx, l:idx, d:idx}, ...7]
-let checks = {};      // {재료명:true}
+let week = null;
+let checks = {};
+let fridge = [];          // ["양파","계란"]
+let filter = 'all';       // 'all' | 'b' | 'l' | 'd'
 
 /* ---------- 저장 / 불러오기 ---------- */
 function save(){
   try{
     localStorage.setItem(KEY, JSON.stringify(week));
     localStorage.setItem(KEYCHK, JSON.stringify(checks));
+    localStorage.setItem(KEYFRIDGE, JSON.stringify(fridge));
   }catch(e){}
 }
 function load(){
   try{
-    const w = localStorage.getItem(KEY);
-    if(w) week = JSON.parse(w);
-    const c = localStorage.getItem(KEYCHK);
-    if(c) checks = JSON.parse(c) || {};
-  }catch(e){ week = null; checks = {}; }
+    const w = localStorage.getItem(KEY); if(w) week = JSON.parse(w);
+    const c = localStorage.getItem(KEYCHK); if(c) checks = JSON.parse(c) || {};
+    const f = localStorage.getItem(KEYFRIDGE); if(f) fridge = JSON.parse(f) || [];
+  }catch(e){ week=null; checks={}; fridge=[]; }
 }
 function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 1300);
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 1400);
 }
 
-/* ---------- 뽑기 ---------- */
-function pickUnique(key, count){
-  const n = POOL[key].length;
-  const idx = [...Array(n).keys()];
-  for(let i=idx.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [idx[i],idx[j]]=[idx[j],idx[i]]; }
+/* ---------- 냉장고 ---------- */
+function parseFridge(txt){
+  return txt.split(/[,，\n·]/).map(s=>s.trim()).filter(s=>s.length>=1);
+}
+function onFridgeInput(){
+  fridge = parseFridge(document.getElementById('fridgeIn').value);
+  save(); renderFridgeTags(); render();
+}
+function renderFridgeTags(){
+  const box = document.getElementById('ftags');
+  box.innerHTML = fridge.map(f=>`<span class="ftag">${esc(f)}</span>`).join("");
+  const c = document.getElementById('fcount');
+  if(fridge.length){ c.style.display=''; c.textContent = fridge.length+"개"; }
+  else c.style.display='none';
+}
+/* 재료 하나가 냉장고에 있나 */
+function inFridge(ingName){
+  return fridge.some(f=>{
+    if(f.length<1) return false;
+    return ingName.includes(f) || f.includes(ingName);
+  });
+}
+/* 메뉴가 냉장고 재료를 몇 개 쓰나 (양념 제외) */
+function fridgeScore(m){
+  let s = 0;
+  (m.ing||[]).forEach(([name,cat])=>{ if(cat!=="양" && inFridge(name)) s++; });
+  return s;
+}
+
+/* ---------- 뽑기 (냉장고 재료 우선) ---------- */
+function pickWeighted(key, count){
+  const pool = POOL[key];
+  const arr = pool.map((m,i)=>({i, s:fridgeScore(m), r:Math.random()}));
+  // 점수 높은 것 먼저, 같은 점수끼리는 무작위
+  arr.sort((a,b)=> b.s - a.s || a.r - b.r);
   const out=[];
-  for(let i=0;i<count;i++) out.push(idx[i % n]);
+  for(let k=0;k<count;k++) out.push(arr[k % arr.length].i);
   return out;
 }
 function rollWeek(){
-  const b = pickUnique('b',7), l = pickUnique('l',7), d = pickUnique('d',7);
+  const b = pickWeighted('b',7), l = pickWeighted('l',7), d = pickWeighted('d',7);
   week = DAYS.map((_,i)=>({b:b[i], l:l[i], d:d[i]}));
   checks = {};
   save(); render();
-  toast("일주일치 뽑았어요");
+  const hit = week.reduce((n,day)=> n + SLOTS.filter(([k])=>fridgeScore(POOL[k][day[k]])>0).length, 0);
+  toast(fridge.length ? `일주일치 완성 · 냉장고 활용 ${hit}끼` : "일주일치 뽑았어요");
 }
 function reroll(dayIdx, slot){
   const used = week.map(w=>w[slot]);
-  const n = POOL[slot].length;
-  let tries=0, next;
-  do{ next = Math.floor(Math.random()*n); tries++; }
-  while(used.includes(next) && tries<60);
-  week[dayIdx][slot] = next;
+  const pool = POOL[slot];
+  const cand = pool.map((m,i)=>({i, s:fridgeScore(m), r:Math.random()}))
+                   .filter(x=>!used.includes(x.i));
+  if(!cand.length){ toast("더 바꿀 메뉴가 없어요"); return; }
+  cand.sort((a,b)=> b.s - a.s || a.r - b.r);
+  // 상위 절반 중에서 무작위 (너무 뻔하지 않게)
+  const top = cand.slice(0, Math.max(1, Math.ceil(cand.length/2)));
+  week[dayIdx][slot] = top[Math.floor(Math.random()*top.length)].i;
   save(); render();
 }
 function clearWeek(){
-  week = null; checks = {}; save(); render();
-  toast("지웠어요");
+  week = null; checks = {}; save(); render(); toast("지웠어요");
 }
 
-/* ---------- 화면 그리기 ---------- */
-function todayIdx(){
-  const d = new Date();
-  return (d.getDay() + 6) % 7; // 월=0
+/* ---------- 필터 ---------- */
+function setFilter(f, btn){
+  filter = f;
+  document.querySelectorAll('.seg').forEach(seg=>{
+    [...seg.querySelectorAll('button')].forEach(b=>{
+      b.setAttribute('aria-pressed', String(b.textContent.trim()===btn.textContent.trim()));
+    });
+  });
+  render(); renderPool();
 }
+function activeSlots(){
+  return filter==='all' ? SLOTS : SLOTS.filter(([k])=>k===filter);
+}
+
+/* ---------- 화면 ---------- */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function todayIdx(){ const d=new Date(); return (d.getDay()+6)%7; }
+
 function render(){
   const wrap = document.getElementById('week');
   if(!week){
-    wrap.innerHTML = '<div class="empty">아직 식단이 없어요.<br>위 <b>🎲 일주일치 새로 뽑기</b>를 눌러보세요.</div>';
+    wrap.innerHTML = '<div class="empty">아직 식단이 없어요.<br>위 <b>🎲 일주일치 새로 뽑기</b>를 눌러보세요.<br><br>냉장고에 있는 재료를 먼저 적어두면<br>그 재료를 쓰는 메뉴로 뽑아드려요.</div>';
     renderShop(); return;
   }
   const ti = todayIdx();
+  const slots = activeSlots();
   wrap.innerHTML = week.map((day,i)=>{
-    const slots = SLOTS.map(([k,label])=>{
+    const rows = slots.map(([k,label])=>{
       const m = POOL[k][day[k]];
-      const sub = m.sub ? m.sub : (m.t ? m.t : "");
+      const sub = m.sub ? m.sub : (m.t || "");
+      const fs = fridgeScore(m);
       return `<div class="slot">
         <span class="slotlabel">${label}</span>
         <div class="slotbody">
-          <div class="slotname">${m.n}</div>
-          ${sub ? `<div class="slotsub">${sub}</div>` : ""}
+          <div class="slotname">${esc(m.n)}${fs?`<span class="badge f">🧊 ${fs}</span>`:''}</div>
+          ${sub?`<div class="slotsub">${esc(sub)}</div>`:""}
         </div>
         <button class="reroll" onclick="reroll(${i},'${k}')" aria-label="다시 뽑기">🔄</button>
       </div>`;
     }).join("");
     return `<div class="day${i===ti?' today':''}">
       <div class="dayhead">${DAYS[i]}요일 ${i===ti?'<span class="badge">오늘</span>':''}</div>
-      ${slots}
+      ${rows}
     </div>`;
   }).join("");
   renderShop();
 }
 
+/* 장보기: 현재 필터에 해당하는 끼니만 집계 + 어떤 메뉴 때문인지 기록 */
 function buildShop(){
   if(!week) return {};
-  const map = {}; // 재료 -> {cat, cnt}
-  week.forEach(day=>{
-    SLOTS.forEach(([k])=>{
+  const map = {};
+  const slots = activeSlots();
+  week.forEach((day,di)=>{
+    slots.forEach(([k])=>{
       const m = POOL[k][day[k]];
       (m.ing||[]).forEach(([name,cat])=>{
-        if(!map[name]) map[name] = {cat, cnt:0};
+        if(!map[name]) map[name] = {cat, cnt:0, meals:[]};
         map[name].cnt++;
+        const tag = `${DAYS[di]} ${SLOTNAME[k]} ${m.n}`;
+        if(!map[name].meals.includes(tag)) map[name].meals.push(tag);
       });
     });
   });
@@ -479,34 +599,46 @@ function renderShop(){
     el.innerHTML = '<div class="empty">식단을 먼저 뽑으면<br>장보기 목록이 자동으로 만들어져요.</div>';
     return;
   }
-  let html = "";
+  const label = filter==='all' ? '' :
+    `<div class="fhelp" style="margin:0 0 10px">${SLOTNAME[filter]} 메뉴에 필요한 재료만 보고 있어요</div>`;
+
+  const have = names.filter(n=>inFridge(n));
+  const need = names.filter(n=>!inFridge(n));
+
+  let html = label;
   CATORDER.forEach(c=>{
-    const list = names.filter(n=>map[n].cat===c).sort((a,b)=>map[b].cnt-map[a].cnt || a.localeCompare(b,'ko'));
+    const list = need.filter(n=>map[n].cat===c)
+                     .sort((a,b)=>map[b].cnt-map[a].cnt || a.localeCompare(b,'ko'));
     if(!list.length) return;
     html += `<h3>${CAT[c]} <span class="cnt">${list.length}</span></h3>`;
-    html += list.map(n=>{
-      const on = !!checks[n];
-      return `<div class="item${on?' checked':''}" onclick="toggle('${n.replace(/'/g,"\\'")}')">
-        <span class="box">${on?'✓':''}</span>
-        <span class="nm">${n}</span>
-        ${map[n].cnt>1?`<span class="cnt">${map[n].cnt}끼</span>`:''}
-      </div>`;
-    }).join("");
+    html += list.map(n=>itemHtml(n, map[n])).join("");
   });
+  if(have.length){
+    html += `<h3 class="have">🧊 냉장고에 있음 — 안 사도 돼요 <span class="cnt">${have.length}</span></h3>`;
+    html += have.sort((a,b)=>a.localeCompare(b,'ko')).map(n=>itemHtml(n, map[n], true)).join("");
+  }
   el.innerHTML = html;
 }
-function toggle(name){
-  checks[name] = !checks[name];
-  save(); renderShop();
+function itemHtml(n, info, isHave){
+  const on = !!checks[n];
+  const meals = info.meals.slice(0,3).join(' · ') + (info.meals.length>3?` 외 ${info.meals.length-3}`:'');
+  return `<div class="item${on?' checked':''}${isHave?' have':''}" onclick="toggle(${JSON.stringify(n)})">
+    <span class="box">${on?'✓':''}</span>
+    <div class="itembody">
+      <div class="nm">${esc(n)}</div>
+      <div class="forwhat">${esc(meals)}</div>
+    </div>
+    ${info.cnt>1?`<span class="cnt">${info.cnt}끼</span>`:''}
+  </div>`;
 }
-function resetChecks(){
-  checks = {}; save(); renderShop(); toast("체크를 지웠어요");
-}
+function toggle(name){ checks[name] = !checks[name]; save(); renderShop(); }
+function resetChecks(){ checks = {}; save(); renderShop(); toast("체크를 지웠어요"); }
+
 function copyList(){
   const map = buildShop();
-  const names = Object.keys(map);
+  const names = Object.keys(map).filter(n=>!inFridge(n));
   if(!names.length){ toast("먼저 식단을 뽑아주세요"); return; }
-  let txt = "🛒 이번주 장보기\n";
+  let txt = `🛒 이번주 장보기${filter==='all'?'':' ('+SLOTNAME[filter]+'만)'}\n`;
   CATORDER.forEach(c=>{
     const list = names.filter(n=>map[n].cat===c).sort((a,b)=>a.localeCompare(b,'ko'));
     if(!list.length) return;
@@ -527,19 +659,22 @@ function fallbackCopy(txt, cb){
 
 function renderPool(){
   const el = document.getElementById('allpool');
-  const groups = [["b","☀️ 아침 (10분 안에)"],["l","🍱 도시락"],["d","🌙 저녁"]];
+  const groups = [["b","☀️ 아침 (10분 안에)"],["l","🍱 도시락"],["d","🌙 저녁"]]
+    .filter(([k])=> filter==='all' || k===filter);
   el.innerHTML = groups.map(([k,title])=>{
-    const items = POOL[k].map(m=>`
-      <details class="pool">
-        <summary>${m.n} ${m.t?`<span class="t fast">${m.t}</span>`:''}</summary>
+    const items = POOL[k].map(m=>{
+      const fs = fridgeScore(m);
+      return `<details class="pool">
+        <summary>${esc(m.n)} ${m.t?`<span class="t fast">${m.t}</span>`:''}${fs?`<span class="badge f">🧊 ${fs}</span>`:''}</summary>
         <div class="rec">
-          ${m.sub?`<div class="ing">${m.sub}</div>`:''}
-          ${m.r?`<div class="ing">${m.r}</div>`:''}
+          ${m.sub?`<div class="ing">${esc(m.sub)}</div>`:''}
+          ${m.r?`<div class="ing">${esc(m.r)}</div>`:''}
           ${m.how?`<div>${m.how}</div>`:''}
-          ${!m.how&&!m.r?`<div class="ing">재료: ${(m.ing||[]).map(x=>x[0]).join(' · ')}</div>`:''}
+          ${!m.how&&!m.r?`<div class="ing">재료: ${(m.ing||[]).map(x=>esc(x[0])).join(' · ')}</div>`:''}
         </div>
-      </details>`).join("");
-    return `<h3 style="font-size:1rem;margin:18px 0 8px">${title}</h3>${items}`;
+      </details>`;
+    }).join("");
+    return `<h3 style="font-size:1rem;margin:18px 0 8px">${title} <span class="cnt">${POOL[k].length}</span></h3>${items}`;
   }).join("");
 }
 
@@ -551,6 +686,9 @@ function tab(i, btn){
 }
 
 load();
+document.getElementById('fridgeIn').value = fridge.join(', ');
+if(fridge.length) document.getElementById('fridgeBox').setAttribute('open','');
+renderFridgeTags();
 render();
 renderPool();
 </script>
