@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="이번주 식단">
+<meta name="theme-color" content="#d97757">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<title>이번주 식단</title>
+<style>
+  :root{
+    --bg:#faf8f4; --card:#fff; --text:#2c2621; --sub:#7a6f64;
+    --line:#e8e0d5; --accent:#d97757; --accent2:#7a9e5e; --accent3:#5b87b8;
+    --chip:#f2ece3; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+    --done:#b5aa9c;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#1c1a18; --card:#262320; --text:#eae4dc; --sub:#a39687;
+      --line:#3a352f; --accent:#e08b6d; --accent2:#8fb36f; --accent3:#7aa3d0;
+      --chip:#322d28; --shadow:0 1px 3px rgba(0,0,0,.3); --done:#6b6157;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.6;
+    -webkit-text-size-adjust:100%;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:14px 14px 90px}
+  header{text-align:center;padding:14px 0 10px}
+  h1{font-size:1.35rem;letter-spacing:-.02em}
+  .lead{color:var(--sub);font-size:.83rem;margin-top:3px}
+
+  nav.tabs{
+    display:flex;gap:6px;position:sticky;top:0;z-index:20;
+    background:var(--bg);padding:9px 0;border-bottom:1px solid var(--line);
+  }
+  nav.tabs button{
+    flex:1;font:inherit;font-weight:600;font-size:.86rem;cursor:pointer;
+    background:var(--chip);color:var(--sub);border:none;border-radius:10px;
+    min-height:44px;padding:8px 4px;transition:.15s;
+  }
+  nav.tabs button[aria-selected="true"]{background:var(--accent);color:#fff}
+  section.pane{display:none;padding-top:16px}
+  section.pane.on{display:block}
+
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .btn{
+    font:inherit;font-weight:700;font-size:.88rem;cursor:pointer;border:none;
+    border-radius:10px;min-height:44px;padding:10px 16px;color:#fff;background:var(--accent);
+    flex:1;min-width:130px;
+  }
+  .btn:active{opacity:.75}
+  .btn.sec{background:var(--chip);color:var(--text)}
+  .btn.g{background:var(--accent2)}
+
+  .day{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:12px 13px;margin-bottom:10px;box-shadow:var(--shadow);
+  }
+  .day.today{border-color:var(--accent);border-width:2px}
+  .dayhead{font-weight:800;font-size:.98rem;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+  .badge{font-size:.66rem;font-weight:700;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px}
+  .slot{
+    display:flex;align-items:flex-start;gap:9px;padding:8px 0;
+    border-top:1px solid var(--line);
+  }
+  .slot:first-of-type{border-top:none}
+  .slotlabel{
+    font-size:.72rem;font-weight:700;color:var(--sub);background:var(--chip);
+    border-radius:6px;padding:3px 6px;white-space:nowrap;min-width:52px;text-align:center;flex-shrink:0;
+  }
+  .slotbody{flex:1;min-width:0}
+  .slotname{font-weight:700;font-size:.95rem}
+  .slotsub{font-size:.78rem;color:var(--sub);margin-top:1px}
+  .reroll{
+    background:none;border:none;font-size:1.05rem;cursor:pointer;padding:6px;
+    min-width:44px;min-height:44px;flex-shrink:0;color:var(--sub);
+  }
+  .reroll:active{opacity:.5}
+
+  .shop h3{
+    font-size:.9rem;margin:18px 0 6px;color:var(--accent);
+    display:flex;align-items:center;gap:6px;
+  }
+  .shop h3:first-child{margin-top:0}
+  .item{
+    display:flex;align-items:center;gap:10px;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px;
+    cursor:pointer;min-height:44px;
+  }
+  .item.checked .nm{text-decoration:line-through;color:var(--done)}
+  .box{
+    width:22px;height:22px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#fff;
+  }
+  .item.checked .box{background:var(--accent2);border-color:var(--accent2)}
+  .nm{flex:1;font-size:.92rem;font-weight:600}
+  .cnt{font-size:.74rem;color:var(--sub);background:var(--chip);padding:2px 7px;border-radius:20px}
+
+  .empty{text-align:center;color:var(--sub);padding:40px 20px;font-size:.9rem}
+
+  details.pool{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:11px 13px;margin-bottom:8px;
+  }
+  details.pool summary{font-weight:700;font-size:.93rem;cursor:pointer;list-style:none;min-height:32px;display:flex;align-items:center;gap:7px}
+  details.pool summary::-webkit-details-marker{display:none}
+  details.pool summary::after{content:"▾";margin-left:auto;color:var(--sub);font-size:.8rem}
+  details.pool[open] summary::after{content:"▴"}
+  .rec{font-size:.84rem;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
+  .rec .ing{color:var(--sub);margin-bottom:5px}
+  .rec b{color:var(--accent)}
+  .t{font-size:.68rem;font-weight:700;background:var(--chip);color:var(--sub);padding:2px 7px;border-radius:20px}
+  .t.fast{background:var(--accent2);color:#fff}
+
+  footer{margin-top:30px;font-size:.75rem;color:var(--sub);text-align:center;line-height:1.7}
+  .saved{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));
+    background:var(--text);color:var(--bg);padding:9px 18px;border-radius:20px;font-size:.83rem;
+    font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50;
+  }
+  .saved.show{opacity:.94}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>🍳 이번주 식단</h1>
+  <p class="lead">버튼 한 번이면 일주일 식단과 장보기 목록이 나와요</p>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" onclick="tab(0,this)">📅 식단표</button>
+  <button role="tab" aria-selected="false" onclick="tab(1,this)">🛒 장보기</button>
+  <button role="tab" aria-selected="false" onclick="tab(2,this)">📖 메뉴 전체</button>
+</nav>
+
+<!-- 식단표 -->
+<section class="pane on">
+  <div class="bar">
+    <button class="btn" onclick="rollWeek()">🎲 일주일치 새로 뽑기</button>
+    <button class="btn sec" onclick="clearWeek()">지우기</button>
+  </div>
+  <div id="week"></div>
+</section>
+
+<!-- 장보기 -->
+<section class="pane">
+  <div class="bar">
+    <button class="btn g" onclick="copyList()">📋 목록 복사</button>
+    <button class="btn sec" onclick="resetChecks()">체크 초기화</button>
+  </div>
+  <div id="shop" class="shop"></div>
+</section>
+
+<!-- 메뉴 전체 -->
+<section class="pane">
+  <div id="allpool"></div>
+</section>
+
+<footer>
+  노션 「인스타 저장 아카이브」 레시피 18건에서 정리한 메뉴 풀<br>
+  아침 20 · 도시락 16 · 저녁 26
+</footer>
+
+</div>
+<div class="saved" id="toast">저장됨</div>
+
+<script>
+/* ===== 재료 분류 =====
+   정=정육·수산  채=채소·과일  유=계란·유제품  가=가공·냉동  곡=밥·면·빵  양=양념(상비) */
+const CAT = {정:"🥩 정육 · 수산", 채:"🥬 채소 · 과일", 유:"🥚 계란 · 유제품", 가:"🧊 가공 · 냉동", 곡:"🍚 밥 · 면 · 빵", 양:"🧂 양념 (있는지만 확인)"};
+const CATORDER = ["정","채","유","가","곡","양"];
+
+const POOL = {
+  b: [
+    {n:"계란간장밥", t:"3분", ing:[["계란","유"],["간장","양"],["참기름","양"],["밥","곡"]],
+     how:"뜨거운 밥에 계란 올리고 간장·참기름 한 바퀴."},
+    {n:"계란볶음밥", t:"7분", ing:[["계란","유"],["대파","채"],["간장","양"],["참기름","양"],["밥","곡"]],
+     r:"밥 1공기 · 계란 2개 · 대파 2T · 간장 1작은술 · 참기름 1작은술",
+     how:"<b>①</b> 대파 먼저 볶아 향 내기 <b>②</b> 계란 넣고 몽글몽글 <b>③</b> 밥·간장 넣고 센 불에 빠르게"},
+    {n:"스팸마요덮밥", t:"8분", ing:[["스팸","가"],["계란","유"],["마요네즈","양"],["김가루","가"],["쪽파","채"],["간장","양"],["설탕","양"],["밥","곡"]],
+     r:"밥 1공기 · 스팸 70g · 계란 2개 · 마요 1T · 김가루 · 쪽파 / 소스: 간장 1T · 설탕 ½T · 물 1T",
+     how:"<b>①</b> 스팸은 기름 없이 노릇하게 <b>②</b> 계란은 촉촉하게 스크램블 <b>③</b> 밥 위에 스팸·계란·소스·마요·김가루"},
+    {n:"참치김치덮밥", t:"8분", ing:[["참치캔","가"],["김치","가"],["양파","채"],["계란","유"],["고추장","양"],["고춧가루","양"],["간장","양"],["설탕","양"],["밥","곡"]],
+     r:"밥 1공기 · 참치 ½캔 · 김치 80g · 양파 ¼개 / 양념: 고추장 ½T · 고춧가루 ½T · 간장 ½T · 설탕 ½T · 물 2T",
+     how:"<b>①</b> 김치·양파 먼저 볶기 <b>②</b> 참치·양념·물 넣고 2분 <b>③</b> 밥 위에 올리고 계란·김가루"},
+    {n:"김치볶음밥", t:"8분", ing:[["김치","가"],["계란","유"],["밥","곡"],["참기름","양"]],
+     how:"김치 먼저 충분히 볶다가 밥, 마지막에 계란프라이 얹기."},
+    {n:"참치주먹밥", t:"7분", ing:[["참치캔","가"],["김가루","가"],["마요네즈","양"],["밥","곡"]],
+     how:"참치마요 섞은 밥을 동글게 쥐어 김가루에 굴리기."},
+    {n:"닭가슴살마요덮밥", t:"8분", ing:[["닭가슴살","정"],["마요네즈","양"],["간장","양"],["쪽파","채"],["밥","곡"]],
+     how:"찢은 닭가슴살에 마요·간장 살짝, 밥 위에 올리고 쪽파."},
+    {n:"스팸 주먹밥", t:"7분", ing:[["스팸","가"],["참기름","양"],["깨","양"],["밥","곡"]],
+     how:"잘게 썬 스팸 구워 밥과 섞고 동글게."},
+    {n:"원팬 치즈 토스트", t:"5분", ing:[["식빵","곡"],["베이컨","정"],["계란","유"],["오이","채"],["토마토","채"],["모짜렐라 치즈","유"],["마요네즈","양"]],
+     r:"식빵 2장 · 베이컨 · 계란 2알 · 오이 ¼개 · 토마토 ½개 · 모짜렐라 치즈",
+     how:"<b>①</b> 팬에 베이컨 굽다가 계란 깨트려 올리고 노른자 살짝 터트리기 <b>②</b> 계란 위에 치즈 듬뿍, 반으로 자른 식빵 얹기 <b>③</b> 노릇해지면 통째로 뒤집고 오이·토마토·마요 <b>④</b> 반으로 접어 한 번 더"},
+    {n:"햄치즈토스트", t:"5분", ing:[["식빵","곡"],["햄","가"],["슬라이스 치즈","유"],["계란","유"]],
+     r:"식빵 2장 · 햄 2장 · 치즈 1장 · 계란 1개",
+     how:"<b>①</b> 식빵 노릇하게 굽기 <b>②</b> 햄·치즈·계란프라이 올려 덮기 · 치즈는 마지막에 올려 뚜껑 덮고 30초"},
+    {n:"햄치즈 또띠아롤", t:"7분", ing:[["또띠아","곡"],["햄","가"],["슬라이스 치즈","유"]],
+     how:"또띠아에 햄·치즈 넣고 말아서 에어프라이어 190℃ 5분."},
+    {n:"프렌치토스트", t:"10분", ing:[["식빵","곡"],["계란","유"],["우유","유"],["설탕","양"]],
+     how:"계란물에 적셔 노릇하게 굽기. 주말 아침용."},
+    {n:"치즈김밥", t:"10분", ing:[["김","가"],["슬라이스 치즈","유"],["햄","가"],["단무지","가"],["참기름","양"],["밥","곡"]],
+     r:"밥 1공기 · 김 2장 · 슬라이스치즈 2장 · 햄 또는 단무지",
+     how:"<b>①</b> 밥에 참기름·깨 약간 <b>②</b> 김 위에 밥·치즈·햄 올려 말기 <b>③</b> 팬에 살짝 굴려 마무리"},
+    {n:"계란국", t:"7분", ing:[["계란","유"],["멸치육수","양"],["국간장","양"],["대파","채"]],
+     r:"달걀 3개 · 멸치육수 1L · 국간장 1T · 소금 약간 · 대파",
+     how:"육수 끓여 국간장으로 간하고, 달걀물 가늘게 붓고 30초 뒤 가볍게 저은 다음 대파."},
+    {n:"콩나물국", t:"8분", ing:[["콩나물","채"],["국간장","양"],["다진마늘","양"],["대파","채"]],
+     r:"콩나물 300g · 물 1.2L · 국간장 1T · 소금 ½t · 다진마늘 ½T · 대파",
+     how:"콩나물과 물을 냄비에 담아 뚜껑 덮고 6분, 간과 대파 넣어 2분 더."},
+    {n:"토마토계란국", t:"8분", ing:[["토마토","채"],["계란","유"],["국간장","양"],["대파","채"]],
+     r:"토마토 2개 · 달걀 3개 · 물 1L · 국간장 1T · 소금 약간 · 대파",
+     how:"토마토 3분 볶고 물 부어 5분, 달걀물 붓고 국간장·소금으로 간."},
+    {n:"순두부계란국", t:"8분", ing:[["순두부","가"],["계란","유"],["멸치육수","양"],["국간장","양"],["다진마늘","양"],["대파","채"]],
+     r:"순두부 1봉 · 달걀 2개 · 멸치육수 1.2L · 국간장 1T · 다진마늘 ½T · 대파",
+     how:"육수에 순두부 5분, 달걀물 붓고 국간장·마늘·대파."},
+    {n:"만둣국", t:"10분", ing:[["냉동만두","가"],["떡국떡","곡"],["계란","유"],["국간장","양"],["대파","채"]],
+     r:"냉동만두 12개 · 떡국떡 200g · 육수 1.5L · 국간장 1.5T · 달걀 1개 · 대파",
+     how:"육수에 떡과 만두 7~8분, 달걀물과 대파 넣고 국간장으로 간."},
+    {n:"재첩국", t:"10분", ing:[["재첩","정"],["부추","채"],["소금","양"]],
+     r:"해감 재첩 500g · 물 1.5L · 부추 50g · 소금 약간",
+     how:"재첩 넣어 입 벌어질 때까지, 껍데기 건져 살 추려 다시 넣고 부추·소금."},
+    {n:"메추리알 치즈구이", t:"10분", ing:[["메추리알","유"],["모짜렐라 치즈","유"]],
+     how:"치즈 위에 반 썬 메추리알 얹어 오븐 170℃ 10분. 끝."}
+  ],
+  l: [
+    {n:"흰쌀밥 도시락 ①", sub:"비엔나소시지볶음, 계란말이, 잔멸치호두볶음, 사과",
+     ing:[["비엔나소시지","가"],["계란","유"],["잔멸치","가"],["호두","가"],["사과","채"],["밥","곡"]]},
+    {n:"흰쌀밥 도시락 ②", sub:"단짠 간장불고기, 메추리알장조림, 시금치나물, 샤인머스켓",
+     ing:[["불고기용 소고기","정"],["메추리알","유"],["시금치","채"],["샤인머스켓","채"],["간장","양"],["밥","곡"]]},
+    {n:"스팸 주먹밥 도시락", sub:"치킨너겟, 브로콜리맛살볶음, 백김치, 방울토마토",
+     ing:[["스팸","가"],["치킨너겟","가"],["브로콜리","채"],["맛살","가"],["백김치","가"],["방울토마토","채"],["밥","곡"]]},
+    {n:"참치마요 덮밥 도시락", sub:"미니 떡갈비, 단무지무침, 옥수수콘샐러드, 오렌지",
+     ing:[["참치캔","가"],["떡갈비","가"],["단무지","가"],["옥수수콘","가"],["오렌지","채"],["마요네즈","양"],["밥","곡"]]},
+    {n:"소고기 볶음밥 도시락", sub:"미니 돈까스, 감자채볶음, 깍두기, 청포도",
+     ing:[["다진 소고기","정"],["돈까스","가"],["감자","채"],["깍두기","가"],["청포도","채"],["밥","곡"]]},
+    {n:"잡곡밥 도시락", sub:"순살 고등어 카레구이, 두부부침, 콩나물무침, 파인애플",
+     ing:[["순살 고등어","정"],["두부","가"],["콩나물","채"],["파인애플","채"],["카레가루","양"],["잡곡밥","곡"]]},
+    {n:"베이컨 야채볶음밥 도시락", sub:"팝콘치킨, 마카로니샐러드, 오이피클, 바나나",
+     ing:[["베이컨","정"],["팝콘치킨","가"],["마카로니","곡"],["오이","채"],["바나나","채"],["마요네즈","양"],["밥","곡"]]},
+    {n:"흰쌀밥 도시락 ⑧", sub:"미니 함박스테이크, 해물동그랑땡, 양배추샐러드, 골드키위",
+     ing:[["다진 소고기","정"],["다진 돼지고기","정"],["해물동그랑땡","가"],["양배추","채"],["골드키위","채"],["밥","곡"]]},
+    {n:"유부초밥 도시락", sub:"순살 닭강정(순한맛), 진미채간장볶음, 무쌈, 멜론",
+     ing:[["유부초밥 세트","가"],["닭다리살","정"],["진미채","가"],["무쌈","가"],["멜론","채"],["밥","곡"]]},
+    {n:"흰쌀밥 도시락 ⑩", sub:"훈제오리구이, 부추양파무침, 간장어묵볶음, 블루베리",
+     ing:[["훈제오리","정"],["부추","채"],["양파","채"],["어묵","가"],["블루베리","채"],["간장","양"],["밥","곡"]]},
+    {n:"새우 볶음밥 도시락", sub:"베이컨 팽이버섯말이, 고구마맛탕, 김자반, 귤",
+     ing:[["냉동새우","정"],["베이컨","정"],["팽이버섯","채"],["고구마","채"],["김자반","가"],["귤","채"],["밥","곡"]]},
+    {n:"흰쌀밥 도시락 ⑫", sub:"간장 제육볶음, 계란 후라이, 깻잎순나물, 배",
+     ing:[["돼지고기 앞다리살","정"],["계란","유"],["깻잎순","채"],["배","채"],["간장","양"],["밥","곡"]]},
+    {n:"오므라이스 도시락", sub:"미니 핫도그, 파스타 샐러드, 깍두기, 딸기",
+     ing:[["계란","유"],["미니 핫도그","가"],["푸실리","곡"],["깍두기","가"],["딸기","채"],["케첩","양"],["밥","곡"]]},
+    {n:"카레라이스 도시락", sub:"감자 고로케, 메추리알 후라이, 오복지, 사과",
+     ing:[["카레가루","양"],["감자","채"],["양파","채"],["당근","채"],["고로케","가"],["메추리알","유"],["사과","채"],["밥","곡"]]},
+    {n:"소고기 주먹밥 도시락", sub:"닭꼬치 구이, 연근 간장조림, 콘치즈, 체리",
+     ing:[["다진 소고기","정"],["닭꼬치","가"],["연근","채"],["옥수수콘","가"],["모짜렐라 치즈","유"],["체리","채"],["밥","곡"]]},
+    {n:"흰쌀밥 도시락 ⑯", sub:"간장 찜닭(순살), 미니 컵 계란찜, 파프리카 스틱, 망고",
+     ing:[["닭다리살","정"],["계란","유"],["파프리카","채"],["망고","채"],["간장","양"],["밥","곡"]]}
+  ],
+  d: [
+    {n:"인생 닭갈비", sub:"치즈 올리고 마지막엔 볶음밥",
+     ing:[["닭다리살","정"],["대파","채"],["양파","채"],["양배추","채"],["모짜렐라 치즈","유"],["고추장","양"],["고춧가루","양"],["굴소스","양"],["매실액","양"],["진간장","양"],["다진마늘","양"],["미림","양"],["올리고당","양"]],
+     r:"닭다리살 500g · 대파 1대 · 양파 1개 · 양배추 2줌 / 양념: 진간장 2T · 고춧가루 1.5T · 굴소스 1T · 매실액 1T · 고추장 2.5T · 다진마늘 1T · 설탕 0.5~1T · 미림 3T · 올리고당 2T · 참기름 1T",
+     how:"<b>①</b> 팬 예열 후 닭 껍질부터, 건드리지 말고 노릇하게 <b>②</b> 기름 절반 닦고 대파로 파기름, 양파 볶다 닭과 섞기 <b>③</b> 양념장 넣고 볶다 양배추, 숨 반쯤 죽으면 치즈 올리고 뚜껑 <b>④</b> 남은 양념에 밥 볶기"},
+    {n:"돈테키 (목살 스테이크)", sub:"전분 묻혀 굽고 양념 졸이기",
+     ing:[["목살","정"],["양배추","채"],["전분","양"],["간장","양"],["굴소스","양"],["맛술","양"],["다진마늘","양"]],
+     r:"목살 4~5덩이 / 양념: 간장 3 · 굴소스 2 · 맛술 2 · 설탕 3 · 물 5 · 다진마늘 1",
+     how:"칼집 내고 전분 묻혀 노릇하게 굽기 → 양념 붓고 약불로 줄여 배게 굽기 → 양배추 샐러드와 함께"},
+    {n:"함박스테이크", sub:"넉넉히 구워 냉동해두기",
+     ing:[["다진 소고기","정"],["다진 돼지고기","정"],["양파","채"],["계란","유"],["빵가루","곡"],["버터","유"],["하이라이스 큐브","양"],["전분","양"]],
+     r:"소고기 다짐육 300g · 돼지고기 다짐육 150g · 다진 양파 ½개 · 계란 1개 · 전분 1T · 빵가루 5T",
+     how:"<b>①</b> 재료 섞어 점성 생길 때까지 치대고 공기 빼기 <b>②</b> 동글납작하게 빚어 버터 한 조각씩 <b>③</b> 에어프라이어 180℃ 20분, 중간 뒤집기 <b>④</b> 소스는 버터에 양파 볶다 물+큐브"},
+    {n:"식당맛 스키야키", sub:"야채는 심플하게",
+     ing:[["샤브용 소고기","정"],["팽이버섯","채"],["물만두","가"],["양파","채"],["부추","채"],["굴소스","양"],["진간장","양"],["미림","양"]],
+     r:"샤브용 고기 두 주먹 · 팽이버섯 · 물만두 6개 · 양파 ¼개 · 부추 / 양념: 굴소스 1 · 진간장 1 · 미림 1 · 가루육수 1",
+     how:"재료와 양념 넣고 중불에서 끓이기 → 불순물 제거 → 익으면 부추 넣어 먹기"},
+    {n:"가지토마토덮밥", sub:"케찹+된장 조합",
+     ing:[["다진 소고기","정"],["가지","채"],["방울토마토","채"],["모짜렐라 치즈","유"],["케첩","양"],["된장","양"],["다진마늘","양"],["밥","곡"]],
+     r:"소고기 다짐육 100g · 가지 1개 · 방울토마토 8알 · 모짜렐라 40g · 케찹 1t · 된장 ½t",
+     how:"마늘·소고기 볶기 → 가지·토마토 넣어 볶기 → 숨 죽으면 케찹·된장·간장 → 치즈 뿌려 녹이기"},
+    {n:"차돌박이 된장찌개", sub:"밀프렙 가능",
+     ing:[["차돌박이","정"],["양파","채"],["애호박","채"],["두부","가"],["감자","채"],["대파","채"],["된장","양"],["고추장","양"],["다진마늘","양"],["코인육수","양"]],
+     how:"차돌박이 굽고 된장·고추장 넣어 볶기 → 용기에 양파·애호박·두부·감자 → 위에 차돌양념·코인육수·대파·마늘"},
+    {n:"제육볶음", sub:"밀프렙 가능 · 전날 냉장해동",
+     ing:[["돼지고기 앞다리살","정"],["양파","채"],["당근","채"],["대파","채"],["고춧가루","양"],["진간장","양"],["굴소스","양"],["맛술","양"],["올리고당","양"],["다진마늘","양"]],
+     r:"돼지고기 2팩 / 양념: 설탕 2 · 고춧가루 6 · 올리고당 2 · 맛술 4 · 굴소스 1 · 진간장 200ml · 물 600ml · 다진마늘 2 · 다진생강 1",
+     how:"핏물 제거 → 양념장 섞기 → 고기 찢어가며 넣기 → 30분 재운 뒤 소분 → 채소는 따로"},
+    {n:"소불고기", sub:"밀프렙 가능 · 당면은 따로",
+     ing:[["불고기용 소고기","정"],["양파","채"],["당근","채"],["대파","채"],["당면","곡"],["간장","양"],["설탕","양"],["다진마늘","양"]],
+     how:"핏물 제거 → 양념 버무려 1회분씩 소분 → 채소·당면은 따로 소분"},
+    {n:"차돌 갈비탕", sub:"밀프렙 가능 · 코인육수 추가",
+     ing:[["차돌박이","정"],["대파","채"],["당면","곡"],["굴소스","양"],["피쉬소스","양"],["코인육수","양"]],
+     how:"차돌박이에 굴소스·피쉬소스 버무려 소분 → 대파·당면 따로 → 먹을 때 물 붓고 끓이다 대파·당면 2~3분"},
+    {n:"샤브샤브", sub:"밀프렙 가능 · 물기 잘 빼기",
+     ing:[["샤브용 소고기","정"],["차돌박이","정"],["배추","채"],["팽이버섯","채"],["대파","채"],["숙주나물","채"],["코인육수","양"],["간장","양"],["맛술","양"]],
+     how:"채소 씻어 물기 빼고, 용기에 채소·육수코인·고기 넣어 냉동"},
+    {n:"카레우동", sub:"밀프렙 가능",
+     ing:[["우동면","곡"],["고형카레","양"],["양파","채"],["당근","채"],["버섯","채"],["대파","채"],["냉동차돌","정"]],
+     how:"용기에 하나씩 소분 → 냄비에 물 넣고 끓이면서 카레 풀어가며"},
+    {n:"새우볶음밥", sub:"밀프렙 가능 · 전자레인지 3분",
+     ing:[["냉동새우","정"],["냉동채소","가"],["굴소스","양"],["밥","곡"]],
+     how:"새우·냉동채소 볶고 밥 넣어 굴소스로 간 → 한 김 식혀 1회분씩 냉동"},
+    {n:"소고기무국", sub:"20분",
+     ing:[["소고기(국거리)","정"],["무","채"],["대파","채"],["국간장","양"],["다진마늘","양"]],
+     r:"소고기 200g · 무 300g · 물 1.5L · 국간장 2T · 다진마늘 1T · 대파",
+     how:"소고기와 무 3분 볶고, 물 붓고 20분 끓인 뒤 간"},
+    {n:"미역국", sub:"20분",
+     ing:[["소고기(국거리)","정"],["마른 미역","가"],["국간장","양"],["다진마늘","양"],["참기름","양"]],
+     r:"마른 미역 15g · 소고기 150g · 물 1.5L · 국간장 2T · 다진마늘 1T · 참기름 1T",
+     how:"미역·소고기를 참기름에 3분 볶고, 물 붓고 20분 끓인 뒤 간"},
+    {n:"북엇국", sub:"15분",
+     ing:[["북어채","가"],["무","채"],["계란","유"],["국간장","양"],["참기름","양"]],
+     r:"북어채 80g · 무 200g · 달걀 2개 · 물 1.5L · 국간장 2T",
+     how:"북어·무를 참기름에 2분 볶고 물 15분, 달걀물과 간"},
+    {n:"떡국", sub:"떡 떠오를 때까지",
+     ing:[["떡국떡","곡"],["소고기(국거리)","정"],["계란","유"],["국간장","양"],["대파","채"],["김가루","가"]],
+     r:"떡국떡 500g · 소고기 150g · 물 1.5L · 국간장 2T · 달걀 1개",
+     how:"소고기 볶고 물 15분, 떡 떠오를 때까지"},
+    {n:"닭곰탕", sub:"45분 · 여유 있는 날",
+     ing:[["생닭 1마리","정"],["대파","채"],["마늘","채"],["소금","양"],["후추","양"]],
+     r:"닭 1마리 1kg · 물 2.5L · 대파 2대 · 마늘 10쪽",
+     how:"닭과 향신채 45분 삶고 살 발라 국물에 다시"},
+    {n:"사골우거지국", sub:"20분 푹",
+     ing:[["사골육수","가"],["삶은 우거지","채"],["된장","양"],["국간장","양"],["다진마늘","양"]],
+     r:"사골육수 1.5L · 삶은 우거지 400g · 된장 2T · 국간장 1T",
+     how:"우거지에 양념 무쳐 사골육수와 20분 푹"},
+    {n:"김치콩나물국", sub:"16분",
+     ing:[["김치","가"],["콩나물","채"],["국간장","양"],["고춧가루","양"]],
+     r:"김치 250g · 콩나물 250g · 물 1.5L · 고춧가루 1T",
+     how:"김치 10분, 콩나물 6분 더"},
+    {n:"시래기된장국", sub:"들깨가루 마무리",
+     ing:[["삶은 시래기","채"],["된장","양"],["들깨가루","양"],["다진마늘","양"],["멸치육수","양"]],
+     r:"삶은 시래기 400g · 멸치육수 1.5L · 된장 3T · 들깨가루 2T",
+     how:"된장·마늘 무쳐 5분 두고, 육수와 20분, 들깨가루"},
+    {n:"바지락국", sub:"입 벌어지면 완성",
+     ing:[["바지락","정"],["무","채"],["대파","채"],["다진마늘","양"],["소금","양"]],
+     r:"해감 바지락 500g · 물 1.2L · 무 150g",
+     how:"무 8분 끓인 뒤 바지락, 입 벌어지면 간"},
+    {n:"찜닭", sub:"간장 베이스",
+     ing:[["닭볶음탕용 닭","정"],["감자","채"],["당근","채"],["양파","채"],["당면","곡"],["간장","양"],["설탕","양"],["다진마늘","양"]],
+     how:"닭 데치고 간장 양념에 채소와 함께 조리다 당면 넣기"},
+    {n:"오징어볶음", sub:"매콤하게",
+     ing:[["오징어","정"],["양파","채"],["당근","채"],["대파","채"],["고추장","양"],["고춧가루","양"],["다진마늘","양"]],
+     how:"채소 볶다 오징어 넣고 센 불에 빠르게, 양념 넣어 마무리"},
+    {n:"잡채", sub:"명절 아니어도",
+     ing:[["당면","곡"],["소고기","정"],["시금치","채"],["당근","채"],["양파","채"],["버섯","채"],["간장","양"],["참기름","양"]],
+     how:"당면 삶고 재료 각각 볶아 간장·참기름에 무치기"},
+    {n:"보쌈 / 수육", sub:"삶아두면 편해요",
+     ing:[["통삼겹 또는 앞다리","정"],["배추","채"],["무","채"],["된장","양"],["대파","채"],["마늘","채"]],
+     how:"된장·향신채 넣고 40~50분 삶기"},
+    {n:"연어스테이크", sub:"굽기만 하면 끝",
+     ing:[["연어","정"],["레몬","채"],["버터","유"],["소금","양"],["후추","양"]],
+     how:"소금·후추 뿌려 버터에 앞뒤로 굽고 레몬"}
+  ]
+};
+
+const DAYS = ["월","화","수","목","금","토","일"];
+const SLOTS = [["b","아침"],["l","도시락"],["d","저녁"]];
+const KEY = "weeklyMenu.v1";
+const KEYCHK = "weeklyMenu.checks.v1";
+
+let week = null;      // [{b:idx, l:idx, d:idx}, ...7]
+let checks = {};      // {재료명:true}
+
+/* ---------- 저장 / 불러오기 ---------- */
+function save(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify(week));
+    localStorage.setItem(KEYCHK, JSON.stringify(checks));
+  }catch(e){}
+}
+function load(){
+  try{
+    const w = localStorage.getItem(KEY);
+    if(w) week = JSON.parse(w);
+    const c = localStorage.getItem(KEYCHK);
+    if(c) checks = JSON.parse(c) || {};
+  }catch(e){ week = null; checks = {}; }
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 1300);
+}
+
+/* ---------- 뽑기 ---------- */
+function pickUnique(key, count){
+  const n = POOL[key].length;
+  const idx = [...Array(n).keys()];
+  for(let i=idx.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [idx[i],idx[j]]=[idx[j],idx[i]]; }
+  const out=[];
+  for(let i=0;i<count;i++) out.push(idx[i % n]);
+  return out;
+}
+function rollWeek(){
+  const b = pickUnique('b',7), l = pickUnique('l',7), d = pickUnique('d',7);
+  week = DAYS.map((_,i)=>({b:b[i], l:l[i], d:d[i]}));
+  checks = {};
+  save(); render();
+  toast("일주일치 뽑았어요");
+}
+function reroll(dayIdx, slot){
+  const used = week.map(w=>w[slot]);
+  const n = POOL[slot].length;
+  let tries=0, next;
+  do{ next = Math.floor(Math.random()*n); tries++; }
+  while(used.includes(next) && tries<60);
+  week[dayIdx][slot] = next;
+  save(); render();
+}
+function clearWeek(){
+  week = null; checks = {}; save(); render();
+  toast("지웠어요");
+}
+
+/* ---------- 화면 그리기 ---------- */
+function todayIdx(){
+  const d = new Date();
+  return (d.getDay() + 6) % 7; // 월=0
+}
+function render(){
+  const wrap = document.getElementById('week');
+  if(!week){
+    wrap.innerHTML = '<div class="empty">아직 식단이 없어요.<br>위 <b>🎲 일주일치 새로 뽑기</b>를 눌러보세요.</div>';
+    renderShop(); return;
+  }
+  const ti = todayIdx();
+  wrap.innerHTML = week.map((day,i)=>{
+    const slots = SLOTS.map(([k,label])=>{
+      const m = POOL[k][day[k]];
+      const sub = m.sub ? m.sub : (m.t ? m.t : "");
+      return `<div class="slot">
+        <span class="slotlabel">${label}</span>
+        <div class="slotbody">
+          <div class="slotname">${m.n}</div>
+          ${sub ? `<div class="slotsub">${sub}</div>` : ""}
+        </div>
+        <button class="reroll" onclick="reroll(${i},'${k}')" aria-label="다시 뽑기">🔄</button>
+      </div>`;
+    }).join("");
+    return `<div class="day${i===ti?' today':''}">
+      <div class="dayhead">${DAYS[i]}요일 ${i===ti?'<span class="badge">오늘</span>':''}</div>
+      ${slots}
+    </div>`;
+  }).join("");
+  renderShop();
+}
+
+function buildShop(){
+  if(!week) return {};
+  const map = {}; // 재료 -> {cat, cnt}
+  week.forEach(day=>{
+    SLOTS.forEach(([k])=>{
+      const m = POOL[k][day[k]];
+      (m.ing||[]).forEach(([name,cat])=>{
+        if(!map[name]) map[name] = {cat, cnt:0};
+        map[name].cnt++;
+      });
+    });
+  });
+  return map;
+}
+function renderShop(){
+  const el = document.getElementById('shop');
+  const map = buildShop();
+  const names = Object.keys(map);
+  if(!names.length){
+    el.innerHTML = '<div class="empty">식단을 먼저 뽑으면<br>장보기 목록이 자동으로 만들어져요.</div>';
+    return;
+  }
+  let html = "";
+  CATORDER.forEach(c=>{
+    const list = names.filter(n=>map[n].cat===c).sort((a,b)=>map[b].cnt-map[a].cnt || a.localeCompare(b,'ko'));
+    if(!list.length) return;
+    html += `<h3>${CAT[c]} <span class="cnt">${list.length}</span></h3>`;
+    html += list.map(n=>{
+      const on = !!checks[n];
+      return `<div class="item${on?' checked':''}" onclick="toggle('${n.replace(/'/g,"\\'")}')">
+        <span class="box">${on?'✓':''}</span>
+        <span class="nm">${n}</span>
+        ${map[n].cnt>1?`<span class="cnt">${map[n].cnt}끼</span>`:''}
+      </div>`;
+    }).join("");
+  });
+  el.innerHTML = html;
+}
+function toggle(name){
+  checks[name] = !checks[name];
+  save(); renderShop();
+}
+function resetChecks(){
+  checks = {}; save(); renderShop(); toast("체크를 지웠어요");
+}
+function copyList(){
+  const map = buildShop();
+  const names = Object.keys(map);
+  if(!names.length){ toast("먼저 식단을 뽑아주세요"); return; }
+  let txt = "🛒 이번주 장보기\n";
+  CATORDER.forEach(c=>{
+    const list = names.filter(n=>map[n].cat===c).sort((a,b)=>a.localeCompare(b,'ko'));
+    if(!list.length) return;
+    txt += `\n[${CAT[c]}]\n` + list.map(n=>`- ${n}${map[n].cnt>1?` (${map[n].cnt}끼)`:''}`).join("\n") + "\n";
+  });
+  const done = ()=>toast("복사했어요");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, ()=>fallbackCopy(txt,done));
+  } else fallbackCopy(txt, done);
+}
+function fallbackCopy(txt, cb){
+  const ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); cb(); }catch(e){ toast("복사 실패"); }
+  document.body.removeChild(ta);
+}
+
+function renderPool(){
+  const el = document.getElementById('allpool');
+  const groups = [["b","☀️ 아침 (10분 안에)"],["l","🍱 도시락"],["d","🌙 저녁"]];
+  el.innerHTML = groups.map(([k,title])=>{
+    const items = POOL[k].map(m=>`
+      <details class="pool">
+        <summary>${m.n} ${m.t?`<span class="t fast">${m.t}</span>`:''}</summary>
+        <div class="rec">
+          ${m.sub?`<div class="ing">${m.sub}</div>`:''}
+          ${m.r?`<div class="ing">${m.r}</div>`:''}
+          ${m.how?`<div>${m.how}</div>`:''}
+          ${!m.how&&!m.r?`<div class="ing">재료: ${(m.ing||[]).map(x=>x[0]).join(' · ')}</div>`:''}
+        </div>
+      </details>`).join("");
+    return `<h3 style="font-size:1rem;margin:18px 0 8px">${title}</h3>${items}`;
+  }).join("");
+}
+
+function tab(i, btn){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected','false'));
+  btn.setAttribute('aria-selected','true');
+  document.querySelectorAll('section.pane').forEach((s,n)=>s.classList.toggle('on', n===i));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+load();
+render();
+renderPool();
+</script>
+</body>
+</html>
