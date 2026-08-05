@@ -97,7 +97,7 @@
   }
   .day.today{border-color:var(--accent);border-width:2px}
   .dayhead{font-weight:800;font-size:.98rem;margin-bottom:9px;display:flex;align-items:center;gap:7px}
-  .badge{font-size:.66rem;font-weight:700;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px}
+  .badge{font-size:.66rem;font-weight:700;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;white-space:nowrap}
   .badge.f{background:var(--accent2)}
   .slot{
     display:flex;align-items:flex-start;gap:9px;padding:8px 0;
@@ -153,8 +153,27 @@
   .rec{font-size:.84rem;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
   .rec .ing{color:var(--sub);margin-bottom:5px}
   .rec b{color:var(--accent)}
-  .t{font-size:.68rem;font-weight:700;background:var(--chip);color:var(--sub);padding:2px 7px;border-radius:20px}
+  details.pool summary{word-break:keep-all}
+  details.pool summary .t,details.pool summary .badge{flex-shrink:0}
+  .t{font-size:.68rem;font-weight:700;background:var(--chip);color:var(--sub);padding:2px 7px;border-radius:20px;white-space:nowrap}
   .t.fast{background:var(--accent2);color:#fff}
+  .t.k{background:var(--accent3);color:#fff}
+
+  /* 검색 */
+  .search{position:relative;margin-bottom:11px}
+  .search input{
+    width:100%;font:inherit;font-size:.95rem;min-height:46px;
+    padding:11px 46px 11px 38px;border-radius:12px;
+    border:1px solid var(--line);background:var(--card);color:var(--text);
+  }
+  .search input:focus{outline:none;border-color:var(--accent)}
+  .search .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.95rem;color:var(--sub);pointer-events:none}
+  .search .clr{
+    position:absolute;right:2px;top:50%;transform:translateY(-50%);display:none;
+    background:none;border:none;font-size:1rem;color:var(--sub);cursor:pointer;min-width:44px;min-height:44px;
+  }
+  .search.on .clr{display:block}
+  mark{background:rgba(217,119,87,.28);color:inherit;border-radius:3px;padding:0 1px}
 
   footer{margin-top:30px;font-size:.75rem;color:var(--sub);text-align:center;line-height:1.7}
   .saved{
@@ -176,7 +195,7 @@
 <nav class="tabs" role="tablist">
   <button role="tab" aria-selected="true" onclick="tab(0,this)">📅 식단표</button>
   <button role="tab" aria-selected="false" onclick="tab(1,this)">🛒 장보기</button>
-  <button role="tab" aria-selected="false" onclick="tab(2,this)">📖 메뉴 전체</button>
+  <button role="tab" aria-selected="false" onclick="tab(2,this)">🔍 메뉴 찾기</button>
 </nav>
 
 <!-- 식단표 -->
@@ -220,7 +239,13 @@
 
 <!-- 메뉴 전체 -->
 <section class="pane">
-  <div class="seg" role="group" aria-label="끼니 보기">
+  <div class="search" id="searchBox">
+    <span class="ico">🔍</span>
+    <input id="q" type="text" autocomplete="off" autocorrect="off" autocapitalize="off"
+           placeholder="메뉴·재료로 찾기 (예: 두부, 계란)" oninput="onSearch()">
+    <button class="clr" onclick="clearSearch()" aria-label="검색어 지우기">✕</button>
+  </div>
+  <div class="seg" id="poolSeg" role="group" aria-label="끼니 보기">
     <button aria-pressed="true" onclick="setFilter('all',this)">전체</button>
     <button aria-pressed="false" onclick="setFilter('b',this)">☀️ 아침</button>
     <button aria-pressed="false" onclick="setFilter('l',this)">🍱 점심</button>
@@ -233,7 +258,7 @@
 <footer>
   노션 「인스타 저장 아카이브」 레시피 96건에서 정리한 메뉴 풀<br>
   아침 30 · 도시락 28 · 저녁 64 · 기타 15<br>
-  마지막 업데이트 2026-07-31
+  마지막 업데이트 2026-08-04 · 메뉴 검색 추가
 </footer>
 
 </div>
@@ -669,7 +694,8 @@ const KEYFRIDGE = "weeklyMenu.fridge.v1";
 let week = null;
 let checks = {};
 let fridge = [];          // ["양파","계란"]
-let filter = 'all';       // 'all' | 'b' | 'l' | 'd'
+let filter = 'all';       // 'all' | 'b' | 'l' | 'd' | 'e'
+let q = '';               // 메뉴 검색어
 
 /* ---------- 저장 / 불러오기 ---------- */
 function save(){
@@ -895,24 +921,69 @@ function fallbackCopy(txt, cb){
   document.body.removeChild(ta);
 }
 
+/* ---------- 메뉴 검색 ---------- */
+const TYPE = {b:"☀️ 아침", l:"🍱 도시락", d:"🌙 저녁", e:"🍰 기타"};
+
+function onSearch(){
+  q = document.getElementById('q').value.trim();
+  document.getElementById('searchBox').classList.toggle('on', !!q);
+  // 검색 중에는 끼니 필터를 감춘다 (전체에서 찾기 때문)
+  document.getElementById('poolSeg').style.display = q ? 'none' : '';
+  renderPool();
+}
+function clearSearch(){
+  const el = document.getElementById('q');
+  el.value = ''; onSearch(); el.focus();
+}
+function norm(s){ return String(s).toLowerCase().replace(/\s+/g,''); }
+function searchTerms(){ return q.split(/[\s,，·]+/).map(norm).filter(Boolean); }
+/* 메뉴 이름 + 재료 이름에서 찾는다 (여러 단어면 모두 들어간 것만) */
+function matchMenu(m, terms){
+  const hay = norm(m.n + " " + (m.ing||[]).map(x=>x[0]).join(" "));
+  return terms.every(t=>hay.includes(t));
+}
+function hl(text, terms){
+  let out = esc(text);
+  (terms||[]).forEach(t=>{
+    const re = new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+    out = out.replace(re, s=>`<mark>${s}</mark>`);
+  });
+  return out;
+}
+function poolItemHtml(m, opts){
+  opts = opts || {};
+  const terms = opts.terms, fs = fridgeScore(m);
+  const ingLine = (m.ing||[]).map(x=> terms?hl(x[0],terms):esc(x[0])).join(' · ');
+  return `<details class="pool">
+    <summary>${terms?hl(m.n,terms):esc(m.n)} ${opts.type?`<span class="t k">${TYPE[opts.type]}</span>`:''}${m.t?`<span class="t fast">${esc(m.t)}</span>`:''}${fs?`<span class="badge f">🧊 ${fs}</span>`:''}</summary>
+    <div class="rec">
+      ${opts.type?`<div class="ing">재료: ${ingLine}</div>`:''}
+      ${m.sub?`<div class="ing">${esc(m.sub)}</div>`:''}
+      ${m.r?`<div class="ing">${esc(m.r)}</div>`:''}
+      ${m.how?`<div>${m.how}</div>`:''}
+      ${!m.how&&!m.r&&!opts.type?`<div class="ing">재료: ${ingLine}</div>`:''}
+    </div>
+  </details>`;
+}
+function renderSearch(){
+  const terms = searchTerms();
+  const hits = [];
+  ["b","l","d","e"].forEach(k=> POOL[k].forEach(m=>{ if(matchMenu(m,terms)) hits.push([k,m]); }));
+  if(!hits.length){
+    return `<div class="empty">「${esc(q)}」에 맞는 메뉴가 없어요.<br>메뉴 이름이나 <b>재료 이름</b>으로 찾아보세요.<br>(예: 두부 · 계란 · 볶음밥 · 새우 마늘)</div>`;
+  }
+  return `<div class="fhelp" style="margin:0 0 9px">「<b>${esc(q)}</b>」 검색 결과 <b>${hits.length}개</b> · 아침·도시락·저녁·기타 전체에서 찾았어요</div>`
+       + hits.map(([k,m])=>poolItemHtml(m,{terms, type:k})).join("");
+}
+
 function renderPool(){
   const el = document.getElementById('allpool');
+  if(q){ el.innerHTML = renderSearch(); return; }
   const groups = [["b","☀️ 아침 (10분 안에)"],["l","🍱 도시락"],["d","🌙 저녁"],
                   ["e","🍰 기타 (디저트 · 안주 · 밑반찬 · 드레싱)"]]
     .filter(([k])=> filter==='all' || k===filter);
   el.innerHTML = groups.map(([k,title])=>{
-    const items = POOL[k].map(m=>{
-      const fs = fridgeScore(m);
-      return `<details class="pool">
-        <summary>${esc(m.n)} ${m.t?`<span class="t fast">${m.t}</span>`:''}${fs?`<span class="badge f">🧊 ${fs}</span>`:''}</summary>
-        <div class="rec">
-          ${m.sub?`<div class="ing">${esc(m.sub)}</div>`:''}
-          ${m.r?`<div class="ing">${esc(m.r)}</div>`:''}
-          ${m.how?`<div>${m.how}</div>`:''}
-          ${!m.how&&!m.r?`<div class="ing">재료: ${(m.ing||[]).map(x=>esc(x[0])).join(' · ')}</div>`:''}
-        </div>
-      </details>`;
-    }).join("");
+    const items = POOL[k].map(m=>poolItemHtml(m)).join("");
     const note = k==='e'
       ? '<div class="fhelp" style="margin:0 0 9px">한 끼 식사가 아니라서 <b>일주일 뽑기에는 들어가지 않아요.</b> 필요할 때 여기서 찾아보세요.</div>'
       : '';
