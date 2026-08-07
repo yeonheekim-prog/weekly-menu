@@ -153,6 +153,21 @@
   .rec{font-size:.84rem;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
   .rec .ing{color:var(--sub);margin-bottom:5px}
   .rec b{color:var(--accent)}
+  /* 참고한 원본 영상 보러 가기 버튼 */
+  .srcbtn{
+    display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+    font-size:.8rem;font-weight:700;text-decoration:none;
+    color:var(--accent);background:var(--chip);
+    border:1px solid var(--line);border-radius:20px;padding:8px 13px;min-height:36px;
+  }
+  .srcbtn:active{opacity:.55}
+  .srcnone{margin-top:10px;font-size:.76rem;color:var(--sub)}
+  .playlink{
+    text-decoration:none;font-size:1rem;padding:6px;
+    min-width:38px;min-height:44px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .playlink:active{opacity:.5}
   details.pool summary{word-break:keep-all}
   details.pool summary .t,details.pool summary .badge{flex-shrink:0}
   .t{font-size:.68rem;font-weight:700;background:var(--chip);color:var(--sub);padding:2px 7px;border-radius:20px;white-space:nowrap}
@@ -757,6 +772,157 @@ const POOL = {
   ]
 };
 
+/* ===== 참고한 원본 영상 주소 =====
+   메뉴 이름 → 그 레시피를 가져온 인스타그램·스레드 게시물 주소.
+   한 게시물에 여러 메뉴가 같이 들어 있던 것(아침국 30가지, 도시락 16가지 등)은
+   아래 묶음 주소를 나눠 씁니다. 메뉴를 새로 넣을 때 여기에 한 줄만 추가하면 됩니다. */
+const _r = c => "https://www.instagram.com/reel/" + c + "/";
+const _p = c => "https://www.instagram.com/p/" + c + "/";
+const 아침국30 = _p("Dawup_JCU71");      // 한 달 아침국 30가지
+const 냉동밀프렙 = _p("DaIBRlYCShG");     // 냉동 밀프렙 10가지
+const 도시락16 = _p("DaxV-Mlh-Xq");      // 초등 점심 도시락 16가지
+const 방학점심12 = _p("DamCdoKiWzf");     // 방학 점심 메뉴 12가지
+const 샌드위치3 = _p("DbIkq7XE_Re");      // 샌드위치 3종 모음
+
+const SRC = {
+  /* ---- 아침 ---- */
+  "계란간장밥":방학점심12, "계란볶음밥":방학점심12, "스팸마요덮밥":방학점심12,
+  "참치김치덮밥":방학점심12, "김치볶음밥":방학점심12, "참치주먹밥":방학점심12,
+  "닭가슴살마요덮밥":방학점심12, "햄치즈토스트":방학점심12, "치즈김밥":방학점심12,
+  "원팬 치즈 토스트":"https://www.threads.com/@220803jeh/post/Da2htPek93B",
+  "햄치즈 또띠아롤":_r("DZf_Q3xydnh"),
+  "메추리알 치즈구이":_r("Daux9A0t1zF"),
+  "베이컨 계란 주먹밥":_r("DbQE-F1IyBh"),
+  "참치 계란 주먹밥":_r("DOqHXz9Em0k"),
+  "떠먹는 감자 오믈렛":_r("DasUcreT2aw"),
+  "프로틴 브라우니 베이크 오츠":_r("DZMrJr2v-78"),
+  "새우계란덮밥":_r("DX_hcJHRdgZ"),
+  "오차즈케 밀프렙":_r("Da-UXpKPpKl"),
+  "연어 김타코":_r("Dap7K_-Oo1v"),
+  "계란 치즈 칩":_r("DXx39vGxVrW"),
+  "소고기 치즈 오믈렛":_r("DaTdBOcT96D"),
+  "오이 시오콘부 오니기리":_r("DajK-faTuaP"),
+  "그릭요거트 수란":_r("DXEFss6Co6c"),
+  "치즈양배추크레페":_r("Dam3xIVS75d"),
+  "밀가루 없이 치즈샌드위치":_r("DaHPIOkSM4R"),
+  "바나나 땅콩버터 토스트":_r("Dbpxr3YPnqB"),
+  "계란국":아침국30, "콩나물국":아침국30, "토마토계란국":아침국30,
+  "순두부계란국":아침국30, "만둣국":아침국30, "재첩국":아침국30,
+
+  /* ---- 도시락 ---- */
+  "흰쌀밥 도시락 ①":도시락16, "흰쌀밥 도시락 ②":도시락16, "스팸 주먹밥 도시락":도시락16,
+  "참치마요 덮밥 도시락":도시락16, "소고기 볶음밥 도시락":도시락16, "잡곡밥 도시락":도시락16,
+  "베이컨 야채볶음밥 도시락":도시락16, "흰쌀밥 도시락 ⑧":도시락16, "유부초밥 도시락":도시락16,
+  "흰쌀밥 도시락 ⑩":도시락16, "새우 볶음밥 도시락":도시락16, "흰쌀밥 도시락 ⑫":도시락16,
+  "오므라이스 도시락":도시락16, "카레라이스 도시락":도시락16, "소고기 주먹밥 도시락":도시락16,
+  "흰쌀밥 도시락 ⑯":도시락16,
+  "얼음틀 초밥":_r("DavOZ4Bu5SD"),
+  "레이지 스시":_r("DYwXjvvR5pE"),
+  "닭가슴살 피자 브리또":_r("DZ1ovy8hlYq"),
+  "짬뽕 파스타 밀프렙":_r("DZtI7k9Sl2D"),
+  "버섯 샌드위치":샌드위치3, "오이 샌드위치":샌드위치3, "에그샐러드 샌드위치":샌드위치3,
+  "신전계란볶이":_r("DaMuP0lRHoy"),
+  "간장 기름떡볶이":_r("DXdllxzARKN"),
+  "김치만두볶음밥":_r("DZYuRutOv82"),
+  "치즈햄 시오콘부 김밥":_r("Da5CAathP9x"),
+  "꽃게 소시지빵":_r("DaoJSkzza0V"),
+
+  /* ---- 저녁 ---- */
+  "인생 닭갈비":_r("DZbaCuXhLIN"),
+  "돈테키 (목살 스테이크)":_r("DY3_YYchep0"),
+  "함박스테이크":_r("Da4yo-zhdiB"),
+  "식당맛 스키야키":_r("Da5FgEou0V9"),
+  "가지토마토덮밥":_r("Da3yjwgBoWA"),
+  "차돌박이 된장찌개":냉동밀프렙, "제육볶음":냉동밀프렙, "소불고기":냉동밀프렙,
+  "차돌 갈비탕":냉동밀프렙, "샤브샤브":냉동밀프렙, "카레우동":냉동밀프렙, "새우볶음밥":냉동밀프렙,
+  "소고기무국":아침국30, "미역국":아침국30, "북엇국":아침국30, "떡국":아침국30,
+  "닭곰탕":아침국30, "사골우거지국":아침국30, "김치콩나물국":아침국30,
+  "시래기된장국":아침국30, "바지락국":아침국30,
+  "후추볶음밥":_r("DY4GR9CTb4M"),
+  "나시고랭":_r("DYtEFPHylx4"),
+  "왕 연어초밥":_r("DbCKfKYzmEE"),
+  "초간단 교촌치킨":_r("DbLU40opZGc"),
+  "식어도 맛있는 닭강정":_r("Dapm9RZTfxT"),
+  "가브리살 마늘수육":_r("Da-Nyn4RkY8"),
+  "풀드포크":_r("DbKueQlyRi8"),
+  "우삼겹 숙주볶음":_r("DXolsTkjxUJ"),
+  "칠리 콘 카르네":_p("DbO5FoImWN6"),
+  "마라샹궈":_r("DbMlud-utd_"),
+  "치킨 토마토 파스타":_r("DbNalAjS0H5"),
+  "우삼겹 들기름 막국수":_r("DafAG-CTeWm"),
+  "땅콩버터 탄탄멘":_r("DY1zx35PP8d"),
+  "칠리오일 냉우동":_r("DasSoIWxgil"),
+  "두부 새우 계란찜":_r("DYrPxeuvTwo"),
+  "항정살 전골":_r("Da-TFoIS-FQ"),
+  "부대찌개":_r("DbF4CxwvaBV"),
+  "명란 순두부 계란국":_r("Da1W0cOyBkm"),
+  "닭한마리":_r("DbCO4LuTdjJ"),
+  "칠리새우덮밥":_r("Da2LDfFhr-E"),
+  "찹쌀닭찜":_r("DbLVuVUyt29"),
+  "양갈비 민트오렌지소스":_r("Da-MCP-R5zJ"),
+  "돼지고기 분짜":_r("DaxEWQWxMES"),
+  "돼지갈비":_r("DbarK0SPyI9"),
+  "우둔살 타다끼":_r("DavC9OfiwMA"),
+  "차돌박이볶음":_r("DWYPbRUDex0"),
+  "제육볶음 + 오이냉국":_r("DbQVcWvTnVh"),
+  "분짜 (Bun Cha)":_r("DbaUJI1S_JK"),
+  "도삭면 (칠리오일+피넛버터)":_r("DbVQ9tJAsdR"),
+  "냉모밀 (닭다리살)":_r("Da0OYq1Mes6"),
+  "시오콘부 파스타":_r("DZH6uEFzRNt"),
+  "시오콘부버터파스타 (양배추)":_r("Daupl2QPUpO"),
+  "Laksa (락사)":_r("DbX9ZsKSRRo"),
+  "대패냉쫄면":_r("DbanzsEBb_n"),
+  "감바스 알 아히요":_r("DbK1EAqxVz9"),
+  "연어야채구이":_r("DbDK-7CRTET"),
+  "미소버터대구":_r("Da2KR78x82z"),
+  "버터치킨카레":_r("DbRlWtIvbPR"),
+  "돼지갈비찜":"https://www.instagram.com/p/DbZaAjgmQtz/?img_index=19",
+  "볶음우동":_r("DZ9JT35Tbiv"),
+  "토마토된장두부조림":_r("DbYBTsxyimD"),
+  "군산식 매운잡채":_r("DZ9SlzhCxJm"),
+  "전자레인지 오므라이스":_r("Dauez9tS7th"),
+  "삼겹감자덮밥":_r("DbiEKmpSAiz"),
+  "소세지버터밥":_r("DY1x6r5SIHG"),
+  "비빔만두":_r("DbiEGrixIpw"),
+  "전자레인지 달걀치즈카레밥":_r("DYpAUq7zsM6"),
+  "버거번 치즈베이크":_r("DbivM4Fx8U5"),
+  "대패삼겹살 김치말이밥":_r("DbmMQHiyFon"),
+  "참치김치치즈밥":_r("DbIoDCAzIxS"),
+  "태국식 상추쌈":_r("DbXHGNvBkqR"),
+  "제육볶음 (콜스 삼겹살 활용)":_r("DbmLJHcGV9y"),
+  "연어 소분 & 스테이크":_r("DbgpvKIhI_y"),
+  "깻잎 동그랑땡":_r("Dbnbe2co7pU"),
+  "양배추새우 스파게티":_r("Dbo2xJYykgA"),
+  "밥버거":_r("Dbowxd4Si05"),
+  "닭윙 주먹밥구이":_r("DbrXR3byyZS"),
+  "두부두루치기":_r("DbsOdV1i72d"),
+
+  /* ---- 기타 (디저트 · 안주 · 밑반찬 · 드레싱) ---- */
+  "살 빠지는 바스크 치즈케이크":_r("DbPiGxfzIt1"),
+  "망고 하몽 안주":_r("DZUfGNqtFsm"),
+  "디종 머스타드 드레싱 3가지":_r("DaWnplGTKXU"),
+  "초간단 밑반찬 7가지":_r("Da9U3sgy8h0"),
+  "해외에서 유행하는 감자샐러드":_r("DbFxVJ8I48e"),
+  "크리미 매쉬포테이토 + 새송이 스테이크":_r("DYiusiLT4LQ"),
+  "명란 두부":_r("DbC_d1nuyfc"),
+  "뿔뽀 (문어구이)":_r("DbLIypVhfhh"),
+  "파마산 토스트":_r("DYvnfrSzALE"),
+  "두부라구":_r("DYRkRC8S9Hy"),
+  "1분 케이크 (바나나 코코아)":_r("DX1c7W9S3JR"),
+  "아보카도 브라우니":_r("DXtiCrwE8lU"),
+  "프랑스식 초콜릿 케이크":_r("DbSsrRpsjhi"),
+  "복숭아 브리 크레페롤":_r("DbLTYIByHKm"),
+  "타코야끼":_r("DGHOEQQzCuO"),
+  "팥빙수 밀프랩":_r("DbHVaOIy7fW"),
+  "티라미수 오버나이트오트밀":_r("DbXG0KPpo9I"),
+  "쿠키토스트":_r("Dbl6tFfzkb2"),
+  "얼그레이 복숭아 그릭요거트":_r("DbBJ94mBghh"),
+  "구멍두부":_r("DaNHr-aJgnD"),
+  "아보카도 무설탕 아이스크림":_r("Dbl0b25z3TV")
+};
+/* 메뉴에 u:"주소"를 직접 적어두면 그게 우선입니다 */
+function srcOf(m){ return (m && (m.u || SRC[m.n])) || null; }
+
 const DAYS = ["월","화","수","목","금","토","일"];
 const SLOTS = [["b","아침"],["l","도시락"],["d","저녁"]];
 const SLOTNAME = {b:"아침", l:"점심", d:"저녁"};
@@ -891,12 +1057,14 @@ function render(){
       const m = POOL[k][day[k]];
       const sub = m.sub ? m.sub : (m.t || "");
       const fs = fridgeScore(m);
+      const src = srcOf(m);
       return `<div class="slot">
         <span class="slotlabel">${label}</span>
         <div class="slotbody">
           <div class="slotname">${esc(m.n)}${fs?`<span class="badge f">🧊 ${fs}</span>`:''}</div>
           ${sub?`<div class="slotsub">${esc(sub)}</div>`:""}
         </div>
+        ${src?`<a class="playlink" href="${esc(src)}" target="_blank" rel="noopener" title="참고한 원본 영상 보기" aria-label="참고한 원본 영상 보기">🎬</a>`:''}
         <button class="reroll" onclick="reroll(${i},'${k}')" aria-label="다시 뽑기">🔄</button>
       </div>`;
     }).join("");
@@ -1025,7 +1193,7 @@ function hl(text, terms){
 }
 function poolItemHtml(m, opts){
   opts = opts || {};
-  const terms = opts.terms, fs = fridgeScore(m);
+  const terms = opts.terms, fs = fridgeScore(m), src = srcOf(m);
   const ingLine = (m.ing||[]).map(x=> terms?hl(x[0],terms):esc(x[0])).join(' · ');
   return `<details class="pool">
     <summary>${terms?hl(m.n,terms):esc(m.n)} ${opts.type?`<span class="t k">${TYPE[opts.type]}</span>`:''}${m.t?`<span class="t fast">${esc(m.t)}</span>`:''}${fs?`<span class="badge f">🧊 ${fs}</span>`:''}</summary>
@@ -1035,6 +1203,9 @@ function poolItemHtml(m, opts){
       ${m.r?`<div class="ing">${esc(m.r)}</div>`:''}
       ${m.how?`<div>${m.how}</div>`:''}
       ${!m.how&&!m.r&&!opts.type?`<div class="ing">재료: ${ingLine}</div>`:''}
+      ${src
+        ? `<a class="srcbtn" href="${esc(src)}" target="_blank" rel="noopener">🎬 참고한 원본 영상 보기</a>`
+        : `<div class="srcnone">참고한 원본 영상이 없는 메뉴예요</div>`}
     </div>
   </details>`;
 }
