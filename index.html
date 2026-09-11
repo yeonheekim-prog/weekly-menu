@@ -154,14 +154,26 @@
   .rec .ing{color:var(--sub);margin-bottom:5px}
   .rec b{color:var(--accent)}
   /* 참고한 원본 영상 보러 가기 버튼 */
+  .actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
   .srcbtn{
-    display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+    display:inline-flex;align-items:center;gap:6px;
     font-size:.8rem;font-weight:700;text-decoration:none;
     color:var(--accent);background:var(--chip);
     border:1px solid var(--line);border-radius:20px;padding:8px 13px;min-height:36px;
   }
   .srcbtn:active{opacity:.55}
-  .srcnone{margin-top:10px;font-size:.76rem;color:var(--sub)}
+  .srcnone{font-size:.76rem;color:var(--sub)}
+  .delbtn{
+    display:inline-flex;align-items:center;gap:6px;font:inherit;
+    font-size:.8rem;font-weight:700;cursor:pointer;
+    color:var(--sub);background:var(--chip);
+    border:1px solid var(--line);border-radius:20px;padding:8px 13px;min-height:36px;
+  }
+  .delbtn:active{opacity:.55}
+  .delbtn.restore{color:var(--accent2);border-color:var(--accent2)}
+  .t.hid{background:var(--sub);color:#fff}
+  details.pool.hidden-item{opacity:.72}
+  details.pool.hiddenbox{border-color:var(--accent);border-style:dashed}
   .playlink{
     text-decoration:none;font-size:1rem;padding:6px;
     min-width:38px;min-height:44px;flex-shrink:0;
@@ -1196,10 +1208,12 @@ const SLOTNAME = {b:"아침", l:"점심", d:"저녁"};
 const KEY = "weeklyMenu.v1";
 const KEYCHK = "weeklyMenu.checks.v1";
 const KEYFRIDGE = "weeklyMenu.fridge.v1";
+const KEYHIDDEN = "weeklyMenu.hidden.v1";
 
 let week = null;
 let checks = {};
 let fridge = [];          // ["양파","계란"]
+let hidden = new Set();   // 메뉴 이름들 — 일주일 뽑기 후보에서 뺀 것
 let filter = 'all';       // 'all' | 'b' | 'l' | 'd' | 'e'
 let q = '';               // 메뉴 검색어
 
@@ -1209,6 +1223,7 @@ function save(){
     localStorage.setItem(KEY, JSON.stringify(week));
     localStorage.setItem(KEYCHK, JSON.stringify(checks));
     localStorage.setItem(KEYFRIDGE, JSON.stringify(fridge));
+    localStorage.setItem(KEYHIDDEN, JSON.stringify([...hidden]));
   }catch(e){}
 }
 function load(){
@@ -1216,7 +1231,36 @@ function load(){
     const w = localStorage.getItem(KEY); if(w) week = JSON.parse(w);
     const c = localStorage.getItem(KEYCHK); if(c) checks = JSON.parse(c) || {};
     const f = localStorage.getItem(KEYFRIDGE); if(f) fridge = JSON.parse(f) || [];
-  }catch(e){ week=null; checks={}; fridge=[]; }
+    const h = localStorage.getItem(KEYHIDDEN); if(h) hidden = new Set(JSON.parse(h) || []);
+  }catch(e){ week=null; checks={}; fridge=[]; hidden=new Set(); }
+}
+
+/* ---------- 메뉴 빼기 / 되돌리기 ----------
+   뺀 메뉴는 일주일 뽑기 후보에서 제외되지만 POOL 자체에서 지워지진 않아요.
+   기기(브라우저)에만 저장되는 개인 설정이라, 다른 사람 화면에는 영향 없어요. */
+function isHidden(name){ return hidden.has(name); }
+function visibleList(k){ return POOL[k].filter(m=>!isHidden(m.n)); }
+function hideMenu(name, silent){
+  hidden.add(name); save(); renderPool();
+  if(!silent) toast(`"${name}" 메뉴에서 뺐어요`);
+}
+function restoreMenu(name){
+  hidden.delete(name); save(); renderPool();
+  toast(`"${name}" 메뉴로 되돌렸어요`);
+}
+function renderHiddenBox(){
+  if(!hidden.size) return '';
+  const names = [...hidden].sort((a,b)=>a.localeCompare(b,'ko'));
+  return `<details class="pool hiddenbox">
+    <summary>🗑 메뉴에서 뺀 것들 <span class="badge f" style="background:var(--sub)">${names.length}</span></summary>
+    <div class="rec">
+      <div class="fhelp" style="margin:0 0 8px">여기서 뺀 메뉴는 <b>일주일 뽑기에 더 이상 나오지 않아요.</b> 다시 쓰고 싶으면 되돌리기를 눌러주세요.</div>
+      ${names.map(n=>`<div class="item" style="cursor:default">
+        <div class="itembody"><div class="nm">${esc(n)}</div></div>
+        <button type="button" class="delbtn restore" onclick="restoreMenu(${JSON.stringify(n)})">↩️ 되돌리기</button>
+      </div>`).join("")}
+    </div>
+  </details>`;
 }
 function toast(msg){
   const t = document.getElementById('toast');
@@ -1256,7 +1300,9 @@ function fridgeScore(m){
 /* ---------- 뽑기 (냉장고 재료 우선) ---------- */
 function pickWeighted(key, count){
   const pool = POOL[key];
-  const arr = pool.map((m,i)=>({i, s:fridgeScore(m), r:Math.random()}));
+  let idxs = pool.map((_,i)=>i).filter(i=>!isHidden(pool[i].n));
+  if(!idxs.length) idxs = pool.map((_,i)=>i); // 전부 뺐으면 어쩔 수 없이 전체에서 뽑기
+  const arr = idxs.map(i=>({i, s:fridgeScore(pool[i]), r:Math.random()}));
   // 점수 높은 것 먼저, 같은 점수끼리는 무작위
   arr.sort((a,b)=> b.s - a.s || a.r - b.r);
   const out=[];
@@ -1274,14 +1320,28 @@ function rollWeek(){
 function reroll(dayIdx, slot){
   const used = week.map(w=>w[slot]);
   const pool = POOL[slot];
-  const cand = pool.map((m,i)=>({i, s:fridgeScore(m), r:Math.random()}))
-                   .filter(x=>!used.includes(x.i));
+  let cand = pool.map((m,i)=>({i, s:fridgeScore(m), r:Math.random()}))
+                 .filter(x=>!used.includes(x.i) && !isHidden(pool[x.i].n));
+  if(!cand.length){
+    // 뺀 메뉴까지 빼면 후보가 없을 때만 어쩔 수 없이 허용
+    cand = pool.map((m,i)=>({i, s:fridgeScore(m), r:Math.random()})).filter(x=>!used.includes(x.i));
+  }
   if(!cand.length){ toast("더 바꿀 메뉴가 없어요"); return; }
   cand.sort((a,b)=> b.s - a.s || a.r - b.r);
   // 상위 절반 중에서 무작위 (너무 뻔하지 않게)
   const top = cand.slice(0, Math.max(1, Math.ceil(cand.length/2)));
   week[dayIdx][slot] = top[Math.floor(Math.random()*top.length)].i;
   save(); render();
+}
+/* 이 끼니는 아예 그만 보고 싶을 때: 뽑기 후보에서 빼고 바로 다른 메뉴로 교체 */
+function hideAndReroll(dayIdx, slot){
+  const before = week[dayIdx][slot];
+  const m = POOL[slot][before];
+  hideMenu(m.n, true);
+  reroll(dayIdx, slot);
+  if(week[dayIdx][slot] !== before){
+    toast(`"${m.n}" 메뉴는 그만 보기로 했어요`);
+  } // 후보가 없어 못 바꿨으면 reroll()이 이미 안내함
 }
 function clearWeek(){
   week = null; checks = {}; save(); render(); toast("지웠어요");
@@ -1332,7 +1392,8 @@ function render(){
           ${sub?`<div class="slotsub">${esc(sub)}</div>`:""}
         </div>
         ${src?`<a class="playlink" href="${esc(src)}" target="_blank" rel="noopener" title="참고한 원본 영상 보기" aria-label="참고한 원본 영상 보기">🎬</a>`:''}
-        <button class="reroll" onclick="reroll(${i},'${k}')" aria-label="다시 뽑기">🔄</button>
+        <button class="reroll" onclick="reroll(${i},'${k}')" aria-label="다시 뽑기" title="다시 뽑기">🔄</button>
+        <button class="reroll" onclick="hideAndReroll(${i},'${k}')" aria-label="이 메뉴는 그만 보기" title="이 메뉴는 그만 보기 (뽑기 후보에서 빼고 다른 메뉴로 바꿔요)">🗑</button>
       </div>`;
     }).join("");
     return `<div class="day${i===ti?' today':''}">
@@ -1461,18 +1522,24 @@ function hl(text, terms){
 function poolItemHtml(m, opts){
   opts = opts || {};
   const terms = opts.terms, fs = fridgeScore(m), src = srcOf(m);
+  const hid = isHidden(m.n);
   const ingLine = (m.ing||[]).map(x=> terms?hl(x[0],terms):esc(x[0])).join(' · ');
-  return `<details class="pool">
-    <summary>${terms?hl(m.n,terms):esc(m.n)} ${opts.type?`<span class="t k">${TYPE[opts.type]}</span>`:''}${m.t?`<span class="t fast">${esc(m.t)}</span>`:''}${fs?`<span class="badge f">🧊 ${fs}</span>`:''}</summary>
+  return `<details class="pool${hid?' hidden-item':''}">
+    <summary>${terms?hl(m.n,terms):esc(m.n)} ${opts.type?`<span class="t k">${TYPE[opts.type]}</span>`:''}${m.t?`<span class="t fast">${esc(m.t)}</span>`:''}${fs?`<span class="badge f">🧊 ${fs}</span>`:''}${hid?`<span class="t hid">뺀 메뉴</span>`:''}</summary>
     <div class="rec">
       ${opts.type?`<div class="ing">재료: ${ingLine}</div>`:''}
       ${m.sub?`<div class="ing">${esc(m.sub)}</div>`:''}
       ${m.r?`<div class="ing">${esc(m.r)}</div>`:''}
       ${m.how?`<div>${m.how}</div>`:''}
       ${!m.how&&!m.r&&!opts.type?`<div class="ing">재료: ${ingLine}</div>`:''}
-      ${src
-        ? `<a class="srcbtn" href="${esc(src)}" target="_blank" rel="noopener">🎬 참고한 원본 영상 보기</a>`
-        : `<div class="srcnone">참고한 원본 영상이 없는 메뉴예요</div>`}
+      <div class="actions">
+        ${src
+          ? `<a class="srcbtn" href="${esc(src)}" target="_blank" rel="noopener">🎬 참고한 원본 영상 보기</a>`
+          : `<span class="srcnone">참고한 원본 영상이 없는 메뉴예요</span>`}
+        ${hid
+          ? `<button type="button" class="delbtn restore" onclick="restoreMenu(${JSON.stringify(m.n)})">↩️ 메뉴로 되돌리기</button>`
+          : `<button type="button" class="delbtn" onclick="hideMenu(${JSON.stringify(m.n)})">🗑 메뉴에서 빼기</button>`}
+      </div>
     </div>
   </details>`;
 }
@@ -1493,13 +1560,16 @@ function renderPool(){
   const groups = [["b","☀️ 아침 (10분 안에)"],["l","🍱 도시락"],["d","🌙 저녁"],
                   ["e","🍰 기타 (디저트 · 안주 · 밑반찬 · 드레싱)"]]
     .filter(([k])=> filter==='all' || k===filter);
-  el.innerHTML = groups.map(([k,title])=>{
-    const items = POOL[k].map(m=>poolItemHtml(m)).join("");
+  let html = renderHiddenBox();
+  html += groups.map(([k,title])=>{
+    const list = visibleList(k);
+    const items = list.map(m=>poolItemHtml(m)).join("");
     const note = k==='e'
       ? '<div class="fhelp" style="margin:0 0 9px">한 끼 식사가 아니라서 <b>일주일 뽑기에는 들어가지 않아요.</b> 필요할 때 여기서 찾아보세요.</div>'
       : '';
-    return `<h3 style="font-size:1rem;margin:18px 0 8px">${title} <span class="cnt">${POOL[k].length}</span></h3>${note}${items}`;
+    return `<h3 style="font-size:1rem;margin:18px 0 8px">${title} <span class="cnt">${list.length}</span></h3>${note}${items}`;
   }).join("");
+  el.innerHTML = html;
 }
 
 function tab(i, btn){
