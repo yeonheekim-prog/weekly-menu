@@ -1280,7 +1280,7 @@ function renderHiddenBox(){
       <div class="fhelp" style="margin:0 0 8px">여기서 뺀 메뉴는 <b>일주일 뽑기에 더 이상 나오지 않아요.</b> 다시 쓰고 싶으면 되돌리기를 눌러주세요.</div>
       ${names.map(n=>`<div class="item" style="cursor:default">
         <div class="itembody"><div class="nm">${esc(n)}</div></div>
-        <button type="button" class="delbtn restore" onclick="restoreMenu(${JSON.stringify(n)})">↩️ 되돌리기</button>
+        <button type="button" class="delbtn restore" onclick="restoreMenu(${jsArg(n)})">↩️ 되돌리기</button>
       </div>`).join("")}
     </div>
   </details>`;
@@ -1392,6 +1392,9 @@ function activeSlots(){
 
 /* ---------- 화면 ---------- */
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+/* onclick="fn(${...})" 처럼 큰따옴표 속성 안에 문자열 인자를 넣을 때 쓰는 헬퍼.
+   JSON.stringify가 만드는 큰따옴표가 onclick="" 속성 자체를 끊어버리는 걸 막기 위해 &quot;로 escape한다. */
+function jsArg(s){ return JSON.stringify(s).replace(/"/g,'&quot;'); }
 function todayIdx(){ const d=new Date(); return (d.getDay()+6)%7; }
 
 function render(){
@@ -1477,7 +1480,7 @@ function renderShop(){
 function itemHtml(n, info, isHave){
   const on = !!checks[n];
   const meals = info.meals.slice(0,3).join(' · ') + (info.meals.length>3?` 외 ${info.meals.length-3}`:'');
-  return `<div class="item${on?' checked':''}${isHave?' have':''}" onclick="toggle(${JSON.stringify(n)})">
+  return `<div class="item${on?' checked':''}${isHave?' have':''}" onclick="toggle(${jsArg(n)})">
     <span class="box">${on?'✓':''}</span>
     <div class="itembody">
       <div class="nm">${esc(n)}</div>
@@ -1560,8 +1563,8 @@ function poolItemHtml(m, opts){
           ? `<a class="srcbtn" href="${esc(src)}" target="_blank" rel="noopener">🎬 참고한 원본 영상 보기</a>`
           : `<span class="srcnone">참고한 원본 영상이 없는 메뉴예요</span>`}
         ${hid
-          ? `<button type="button" class="delbtn restore" onclick="restoreMenu(${JSON.stringify(m.n)})">↩️ 메뉴로 되돌리기</button>`
-          : `<button type="button" class="delbtn" onclick="hideMenu(${JSON.stringify(m.n)})">🗑 메뉴에서 빼기</button>`}
+          ? `<button type="button" class="delbtn restore" onclick="restoreMenu(${jsArg(m.n)})">↩️ 메뉴로 되돌리기</button>`
+          : `<button type="button" class="delbtn" onclick="hideMenu(${jsArg(m.n)})">🗑 메뉴에서 빼기</button>`}
       </div>
     </div>
   </details>`;
